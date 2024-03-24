@@ -1,11 +1,16 @@
 import os
 import getpass
 import json
-from Encryptor import encryptor, read_file, write_file
+from .Encryptor import encryptor, read_file, write_file
+from .config import *
 
 class InternalUser:
+
     def __init__(self) -> None:
         pass
+
+
+
 
 class AdminUser(InternalUser):
 
@@ -24,6 +29,11 @@ class AdminUser(InternalUser):
         user_password = getpass.getpass("User password: ")
         admin_data["users"][user_name] = user_password
         write_file(self.admin_file, admin_data)
+
+        # make an encrypted folder for this user
+        user_folder = f"{HOME}/{encryptor.encrypt_data(user_name)}"
+        os.makedirs(user_folder)
+        write_file(f"{user_folder}/{encryptor.encrypt_data(user_name)}", {})
     
     def createGroup(self):
         group_name = input("Group name: ")
@@ -44,7 +54,8 @@ class AdminUser(InternalUser):
         admin_data["groups"][group_name].extend(valid_group_users)
         write_file(self.admin_file, admin_data)
 
-AdminUser().createUser()
-AdminUser().createUser()
-AdminUser().createGroup()
-print(read_file(AdminUser().admin_file))
+admin_user = AdminUser()
+# AdminUser().createUser()
+# AdminUser().createUser()
+# AdminUser().createGroup()
+# print(read_file(AdminUser().admin_file))
