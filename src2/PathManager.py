@@ -3,7 +3,7 @@ import json
 import xattr
 import getpass
 from checksumdir import dirhash
-from Encryptor import encryptor
+from .Encryptor import encryptor
 
 def permission_to_bool(permission_num):
     permission_oct = int(str(permission_num), 8)
@@ -15,8 +15,30 @@ class PathManager:
         self.root = "file-system"
         self.home = os.path.join(self.root, "home")
         os.makedirs(self.home, exist_ok=True)
-    
+        self.set_path_permission(self.root, {
+            "owner": "admin",
+            "group": "admin",
+            "permission": 755
+        })
+        self.set_path_permission(self.home, {
+            "owner": "admin",
+            "group": "admin",
+            "permission": 755
+        })
+        try:
+            self.get_all_users()
+        except IOError:
+            self.set_all_users({
+                "admin": {
+                    "password": "ECE422",
+                    "groups": "admin",
+                    "lastHash": ""
+                }
+            })
+            admin_home_path = os.path.join(self.home, encryptor.encrypt_data("admin"))
+            self.create_folder(admin_home_path, "admin")
 
+    
     def get_all_users(self):
         encrypted_users = xattr.getxattr(self.root, "SFS.users")
         return json.loads(encryptor.decrypt_data(encrypted_users))
@@ -62,13 +84,13 @@ class PathManager:
 
     
     def get_path_permission(self, path):
-        encrypted_permission = xattr.getxattr(path, "SFS.permission")
+        encrypted_permission = xattr.getxattr(path, "SFS.permission").decode()
         return json.loads(encryptor.decrypt_data(encrypted_permission))
     
 
     def set_path_permission(self, path, permission):
         encrypted_permission = encryptor.encrypt_data(json.dumps(permission))
-        xattr.setxattr(path, "SFS.permission", encrypted_permission)
+        xattr.setxattr(path, "SFS.permission", encrypted_permission.encode())
     
 
     def check_permission(self, path, user_name, permission):
@@ -107,7 +129,7 @@ class PathManager:
     
     def write_file(self, file_path, data):
         encrypted_data = encryptor.encrypt_data(json.dumps(data))
-        with open(file_path, 'w') as f:
+        with open(file_path, 'a') as f:
             f.write(encrypted_data)
 
     

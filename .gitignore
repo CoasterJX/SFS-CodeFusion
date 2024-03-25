@@ -1,1 +1,4 @@
 root/
+*__pycache__/
+file-system/
+SFS-key.pem

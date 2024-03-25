@@ -1,6 +1,7 @@
 import os
 import getpass
 from src2.PathManager import PM
+from src2.Encryptor import encryptor
 
 if __name__ == '__main__':
 
@@ -52,6 +53,10 @@ if __name__ == '__main__':
 
                 else:
                     print("You haven't login. Please login first.")
+            
+            # admin user access
+            elif cmd == "create-user" and current_user_name == "admin":
+                PM.create_user(input("Enter user name: "))
 
             # internal user access
             elif cmd == "logout":
@@ -72,7 +77,155 @@ if __name__ == '__main__':
 
                 # check if path is executable
                 if not PM.check_permission(real_ls_path, current_user_name, 'x'):
+                    print(f"{ls_path}: Permission denied")
+                    continue
+
+                # execute and display decoded ones with read access
+                for res in os.listdir(real_ls_path):
+                    res_path = os.path.join(real_ls_path, res)
+                    if PM.check_permission(res_path, current_user_name, 'r'):
+                        print(encryptor.decrypt_data(res))
+                    else:
+                        print(res)
+                
+            elif cmd == "cd":
+
+                # get target cd path
+                if len(argv) == 0:
+                    print("Please specify destination.")
+                    continue
+                destination = os.path.join(current_path, argv[0])
+                destination = os.path.normpath(destination)
+                real_cd_path = PM.to_real_encoded_path(destination)
+
+                # check if it is a directory
+                if not os.path.isdir(real_cd_path):
+                    print(f"{destination}: Not a directory")
+
+                # check target path is executable
+                if not PM.check_permission(real_cd_path, current_user_name, 'x'):
+                    print(f"{destination}: Permission denied")
+                    continue
+                
+                # cd to destination
+                current_path = destination
+            
+            elif cmd == "mkdir":
+
+                # get target folder
+                if len(argv) == 0:
+                    print("PLease specify folder name.")
+                    continue
+                file_name = argv[0]
+                real_file_path = os.path.join(
+                    PM.to_real_encoded_path(current_path),
+                    encryptor.encrypt_data(file_name)
+                )
+
+                # check write permission of current directory
+                if not PM.check_permission(
+                    PM.to_real_encoded_path(current_path),
+                    current_user_name, 'w'
+                ):
+                    print(f"{file_name}: Permission denied")
+                    continue
+
+                # make the folder
+                PM.create_folder(real_file_path, current_user_name)
+
+            elif cmd == "touch":
+
+                # get target file
+                if len(argv) == 0:
+                    print("PLease specify folder name.")
+                    continue
+                file_name = argv[0]
+                real_file_path = os.path.join(
+                    PM.to_real_encoded_path(current_path),
+                    encryptor.encrypt_data(file_name)
+                )
+
+                # check write permission of current directory
+                if not PM.check_permission(
+                    PM.to_real_encoded_path(current_path),
+                    current_user_name, 'w'
+                ):
+                    print(f"{file_name}: Permission denied")
+                    continue
+
+                # make the file
+                PM.create_file(real_file_path, current_user_name)
+            
+            elif cmd == "cat":
+
+                # get target file
+                if len(argv) == 0:
+                    print("PLease specify file name.")
+                    continue
+                file_path = os.path.join(current_path, argv[0])
+                real_file_path = PM.to_real_encoded_path(file_path)
+
+                # check if it is file
+                if not os.path.isfile(real_file_path):
+                    print(f"{argv[0]}: Not a file")
+                    continue
+
+                # check read permission
+                if not PM.check_permission(real_file_path, current_user_name, 'r'):
+                    print(f"{argv[0]}: Permission denied")
+                    continue
+
+                # read file
+                print(PM.read_file(real_file_path))
+            
+            elif cmd == "echo":
+
+                # get target file
+                if len(argv) < 2:
+                    print("PLease specify file name and message.")
+                    continue
+                file_path = os.path.join(current_path, argv[0])
+                real_file_path = PM.to_real_encoded_path(file_path)
+
+                # check write permission
+                if not PM.check_permission(real_file_path, current_user_name, 'w'):
+                    print(f"{argv[0]}: Permission denied")
+                    continue
+
+                # write to file
+                write_content = argv[1]
+                PM.write_file(real_file_path, encryptor.encrypt_data(write_content))
+
+            elif cmd == "mv":
+
+                # get target path
+                if len(argv) < 2:
+                    print("PLease specify original and new file/folder name.")
+                    continue
+                target_path = os.path.join(current_path, argv[0])
+                real_path = PM.to_real_encoded_path(target_path)
+
+                # check write permission
+                if not PM.check_permission(real_path, current_user_name, 'w'):
+                    print(f"{argv[0]}: Permission denied")
+                    continue
+
+                # check if renamed file/folder exists
+                renamed_path = os.path.join(current_path, argv[1])
+                try:
+                    PM.to_real_encoded_path(renamed_path)
+                    print(f"{argv[1]}: Already exists")
+                    continue
+                except:
                     pass
+
+                # rename file/folder
+                real_renamed_path = os.path.join(
+                    PM.to_real_encoded_path(current_path),
+                    encryptor.encrypt_data(argv[1])
+                )
+                os.rename(real_path, real_renamed_path)
+
 
         except Exception as e:
             print(e)
