@@ -18,12 +18,13 @@ if __name__ == '__main__':
 
     while True:
         try:
-            cmd = input(f"{current_user}>>> ").split(" ")
+            print()
+            cmd = input(f"{current_user_name}>>> ").split(" ")
             argv = [] if len(cmd) < 2 else cmd[1:]
             cmd = cmd[0]
             if cmd == "":
                 continue
-            print("\n")
+            print()
 
             # guest user access
             if current_user == None:
@@ -60,6 +61,7 @@ if __name__ == '__main__':
 
             # internal user access
             elif cmd == "logout":
+                PM.save_hash(current_user_name)
                 init()
             
             elif cmd == "pwd":
@@ -82,6 +84,9 @@ if __name__ == '__main__':
 
                 # execute and display decoded ones with read access
                 for res in os.listdir(real_ls_path):
+                    if res == "home":
+                        print(res)
+                        continue
                     res_path = os.path.join(real_ls_path, res)
                     if PM.check_permission(res_path, current_user_name, 'r'):
                         print(encryptor.decrypt_data(res))
@@ -101,6 +106,7 @@ if __name__ == '__main__':
                 # check if it is a directory
                 if not os.path.isdir(real_cd_path):
                     print(f"{destination}: Not a directory")
+                    continue
 
                 # check target path is executable
                 if not PM.check_permission(real_cd_path, current_user_name, 'x'):
@@ -121,6 +127,14 @@ if __name__ == '__main__':
                     PM.to_real_encoded_path(current_path),
                     encryptor.encrypt_data(file_name)
                 )
+
+                # ensure folder does not exists
+                try:
+                    PM.to_real_encoded_path(os.path.join(current_path, file_name))
+                    print(f"{file_name}: Folder already exists")
+                    continue
+                except:
+                    pass
 
                 # check write permission of current directory
                 if not PM.check_permission(
@@ -145,6 +159,14 @@ if __name__ == '__main__':
                     encryptor.encrypt_data(file_name)
                 )
 
+                # ensure file does not exists
+                try:
+                    PM.to_real_encoded_path(os.path.join(current_path, file_name))
+                    print(f"{file_name}: File already exists")
+                    continue
+                except:
+                    pass
+
                 # check write permission of current directory
                 if not PM.check_permission(
                     PM.to_real_encoded_path(current_path),
@@ -153,8 +175,9 @@ if __name__ == '__main__':
                     print(f"{file_name}: Permission denied")
                     continue
 
-                # make the file
+                # make the file and write an empty
                 PM.create_file(real_file_path, current_user_name)
+                PM.write_file(real_file_path, "")
             
             elif cmd == "cat":
 
@@ -193,8 +216,8 @@ if __name__ == '__main__':
                     continue
 
                 # write to file
-                write_content = argv[1]
-                PM.write_file(real_file_path, encryptor.encrypt_data(write_content))
+                write_content = " ".join(argv[1:])
+                PM.write_file(real_file_path, write_content)
 
             elif cmd == "mv":
 
@@ -228,6 +251,7 @@ if __name__ == '__main__':
 
 
         except Exception as e:
+            print("error occurred")
             print(e)
             continue
                     

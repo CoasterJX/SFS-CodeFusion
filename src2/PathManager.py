@@ -28,6 +28,7 @@ class PathManager:
         try:
             self.get_all_users()
         except IOError:
+            print("Initializing SFS for first use...")
             self.set_all_users({
                 "admin": {
                     "password": "ECE422",
@@ -37,16 +38,17 @@ class PathManager:
             })
             admin_home_path = os.path.join(self.home, encryptor.encrypt_data("admin"))
             self.create_folder(admin_home_path, "admin")
+            self.save_hash("admin")
 
     
     def get_all_users(self):
-        encrypted_users = xattr.getxattr(self.root, "SFS.users")
+        encrypted_users = xattr.getxattr(self.root, "user.SFS.users").decode()
         return json.loads(encryptor.decrypt_data(encrypted_users))
     
 
     def set_all_users(self, all_users):
         encrypted_users = encryptor.encrypt_data(json.dumps(all_users))
-        xattr.setxattr(self.root, "SFS.users", encrypted_users)
+        xattr.setxattr(self.root, "user.SFS.users", encrypted_users.encode())
     
 
     def get_user(self, user_name):
@@ -68,29 +70,30 @@ class PathManager:
         self.set_all_users(users)
         user_home_path = os.path.join(self.home, encryptor.encrypt_data(user_name))
         self.create_folder(user_home_path, user_name)
+        self.save_hash(user_name)
 
 
     def save_hash(self, user_name):
         users = self.get_all_users()
-        user_home_path = os.path.join(self.home, encryptor.encrypt_data(user_name))
+        user_home_path = self.to_real_encoded_path(os.path.join("/home", user_name))
         users[user_name]["lastHash"] = dirhash(user_home_path, 'sha256')
         self.set_all_users(users)
 
     
     def check_hash(self, user_name):
         users = self.get_all_users()
-        user_home_path = os.path.join(self.home, encryptor.encrypt_data(user_name))
+        user_home_path = self.to_real_encoded_path(os.path.join("/home", user_name))
         return users[user_name]["lastHash"] == dirhash(user_home_path, 'sha256')
 
     
     def get_path_permission(self, path):
-        encrypted_permission = xattr.getxattr(path, "SFS.permission").decode()
+        encrypted_permission = xattr.getxattr(path, "user.SFS.permission").decode()
         return json.loads(encryptor.decrypt_data(encrypted_permission))
     
 
     def set_path_permission(self, path, permission):
         encrypted_permission = encryptor.encrypt_data(json.dumps(permission))
-        xattr.setxattr(path, "SFS.permission", encrypted_permission.encode())
+        xattr.setxattr(path, "user.SFS.permission", encrypted_permission.encode())
     
 
     def check_permission(self, path, user_name, permission):
@@ -129,8 +132,10 @@ class PathManager:
     
     def write_file(self, file_path, data):
         encrypted_data = encryptor.encrypt_data(json.dumps(data))
-        with open(file_path, 'a') as f:
+        with open(file_path, 'w') as f:
             f.write(encrypted_data)
+        # a = self.read_file(file_path)
+        # print(a)
 
     
     def create_folder(self, folder_path, owner):
@@ -145,9 +150,11 @@ class PathManager:
     
 
     def to_real_encoded_path(self, fake_path):
+        if fake_path == "/":
+            return self.root
         encoded_path = ""
         fake_path_components = os.path.normpath(fake_path).split(os.sep)
-        for fpc, i in enumerate(fake_path_components):
+        for i, fpc in enumerate(fake_path_components):
             if i == 0:
                 encoded_path = self.root
                 continue
@@ -169,7 +176,7 @@ class PathManager:
     def to_fake_decoded_path(self, real_path):
         decoded_path = ""
         real_path_components = os.path.normpath(real_path).split(os.sep)
-        for rpc, i in enumerate(real_path_components):
+        for i, rpc in enumerate(real_path_components):
             if i == 0:
                 decoded_path = "/"
                 continue
@@ -180,3 +187,35 @@ class PathManager:
         return decoded_path
 
 PM = PathManager()
+
+if __name__ == '__main__':
+    os.makedirs("aaa")
+    def set_extended_attribute_with_json(path, attribute_name, data):
+        attr_name = f"user.{attribute_name}"
+        json_data = json.dumps(data)  # Convert the data to a JSON string
+        xattr.setxattr(path, attr_name, json_data.encode())
+
+    # Get and deserialize an extended attribute
+    def get_extended_attribute_as_json(path, attribute_name):
+        attr_name = f"user.{attribute_name}"
+        try:
+            json_data = xattr.getxattr(path, attr_name)
+            return json.loads(json_data.decode())  # Convert the JSON string back to data
+        except IOError:  # The attribute might not exist
+            return None
+
+    # Example usage
+    path = "aaa"  # Replace with your path
+    attribute_name = "metadata"
+    data = {
+        "author": "John Doe",
+        "tags": ["example", "demo"],
+        "published": True
+    }
+
+    # Set the attribute with serialized JSON data
+    set_extended_attribute_with_json(path, attribute_name, data)
+
+    # Retrieve the attribute and deserialize the JSON data
+    retrieved_data = get_extended_attribute_as_json(path, attribute_name)
+    print(f"Retrieved Data: {retrieved_data}")
