@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
                 # get target path
                 if len(argv) < 2:
-                    print("PLease specify original and new file/folder name.")
+                    print("Please specify original and new file/folder name.")
                     continue
                 target_path = os.path.join(current_path, argv[0])
                 real_path = PM.to_real_encoded_path(target_path)
@@ -248,6 +248,26 @@ if __name__ == '__main__':
                     encryptor.encrypt_data(argv[1])
                 )
                 os.rename(real_path, real_renamed_path)
+
+            elif cmd == "chmod":
+
+                # get new permission and permission path
+                if len(argv) < 2:
+                    print("Please specify new permission and file/folder name.")
+                    continue
+                new_permission = int(argv[0])
+                target_path = os.path.join(current_path, argv[1])
+                real_path = PM.to_real_encoded_path(target_path)
+
+                # check execute permission
+                if not PM.check_permission(real_path, current_user_name, 'x'):
+                    print(f"{argv[1]}: Permission denied")
+                    continue
+
+                # change permission
+                old_permission = PM.get_path_permission(real_path)
+                old_permission["permission"] = new_permission
+                PM.set_path_permission(real_path, old_permission)
 
 
         except Exception as e:
