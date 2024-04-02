@@ -260,8 +260,8 @@ if __name__ == '__main__':
                 target_path = os.path.join(current_path, argv[1])
                 real_path = PM.to_real_encoded_path(target_path)
 
-                # check write permission
-                if not PM.check_permission(real_path, current_user_name, 'w'):
+                # check owner
+                if PM.get_path_permission(real_path)["owner"] != current_user_name:
                     print(f"{argv[1]}: Permission denied")
                     continue
 
