@@ -1,4 +1,5 @@
 import os
+import shutil
 import getpass
 from src.PathManager import PM
 from src.Encryptor import encryptor
@@ -259,8 +260,8 @@ if __name__ == '__main__':
                 target_path = os.path.join(current_path, argv[1])
                 real_path = PM.to_real_encoded_path(target_path)
 
-                # check execute permission
-                if not PM.check_permission(real_path, current_user_name, 'x'):
+                # check write permission
+                if not PM.check_permission(real_path, current_user_name, 'w'):
                     print(f"{argv[1]}: Permission denied")
                     continue
 
@@ -268,6 +269,25 @@ if __name__ == '__main__':
                 old_permission = PM.get_path_permission(real_path)
                 old_permission["permission"] = new_permission
                 PM.set_path_permission(real_path, old_permission)
+            
+            elif cmd == "rm":
+
+                if len(argv) < 1:
+                    print("Please specify file/folder name.")
+                    continue
+                target_path = os.path.join(current_path, argv[0])
+                real_path = PM.to_real_encoded_path(target_path)
+
+                # check write permission
+                if not PM.check_permission(real_path, current_user_name, 'w'):
+                    print(f"{argv[0]}: Permission denied")
+                    continue
+
+                # delete file/folder
+                if os.path.isfile(real_path):
+                    os.remove(real_path)
+                elif os.path.isdir(real_path):
+                    shutil.rmtree(real_path)
 
 
         except Exception as e:
