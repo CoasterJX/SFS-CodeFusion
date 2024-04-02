@@ -4,7 +4,7 @@ import getpass
 from src.PathManager import PM
 from src.Encryptor import encryptor
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     print("Secure File System (SFS)")
     current_user = None
@@ -53,7 +53,7 @@ if __name__ == '__main__':
                             print("You need key to access admin user.")
                             init()
                             continue
-                        with open(encrypt_key_file, 'rb') as f:
+                        with open(encrypt_key_file, "rb") as f:
                             encrypt_key = f.read()
                         if encrypt_key != encryptor.key_backup:
                             print("Wrong key.")
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
                 else:
                     print("You haven't login. Please login first.")
-            
+
             # admin user access
             elif cmd == "create-user" and current_user_name == "admin":
                 PM.create_user(input("Enter user name: "))
@@ -79,7 +79,7 @@ if __name__ == '__main__':
             elif cmd == "logout":
                 PM.save_hash(current_user_name)
                 init()
-            
+
             elif cmd == "pwd":
                 print(current_path)
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
                 real_ls_path = PM.to_real_encoded_path(ls_path)
 
                 # check if path is executable
-                if not PM.check_permission(real_ls_path, current_user_name, 'x'):
+                if not PM.check_permission(real_ls_path, current_user_name, "x"):
                     print(f"{ls_path}: Permission denied")
                     continue
 
@@ -104,11 +104,11 @@ if __name__ == '__main__':
                         print(res)
                         continue
                     res_path = os.path.join(real_ls_path, res)
-                    if PM.check_permission(res_path, current_user_name, 'r'):
+                    if PM.check_permission(res_path, current_user_name, "r"):
                         print(encryptor.decrypt_data(res))
                     else:
                         print(res)
-                
+
             elif cmd == "cd":
 
                 # get target cd path
@@ -125,23 +125,23 @@ if __name__ == '__main__':
                     continue
 
                 # check target path is executable
-                if not PM.check_permission(real_cd_path, current_user_name, 'x'):
+                if not PM.check_permission(real_cd_path, current_user_name, "x"):
                     print(f"{destination}: Permission denied")
                     continue
-                
+
                 # cd to destination
                 current_path = destination
-            
+
             elif cmd == "mkdir":
 
                 # get target folder
                 if len(argv) == 0:
-                    print("PLease specify folder name.")
+                    print("Please specify folder name.")
                     continue
                 file_name = argv[0]
                 real_file_path = os.path.join(
                     PM.to_real_encoded_path(current_path),
-                    encryptor.encrypt_data(file_name)
+                    encryptor.encrypt_data(file_name),
                 )
 
                 # ensure folder does not exists
@@ -154,8 +154,7 @@ if __name__ == '__main__':
 
                 # check write permission of current directory
                 if not PM.check_permission(
-                    PM.to_real_encoded_path(current_path),
-                    current_user_name, 'w'
+                    PM.to_real_encoded_path(current_path), current_user_name, "w"
                 ):
                     print(f"{file_name}: Permission denied")
                     continue
@@ -167,12 +166,12 @@ if __name__ == '__main__':
 
                 # get target file
                 if len(argv) == 0:
-                    print("PLease specify folder name.")
+                    print("Please specify file name.")
                     continue
                 file_name = argv[0]
                 real_file_path = os.path.join(
                     PM.to_real_encoded_path(current_path),
-                    encryptor.encrypt_data(file_name)
+                    encryptor.encrypt_data(file_name),
                 )
 
                 # ensure file does not exists
@@ -185,8 +184,7 @@ if __name__ == '__main__':
 
                 # check write permission of current directory
                 if not PM.check_permission(
-                    PM.to_real_encoded_path(current_path),
-                    current_user_name, 'w'
+                    PM.to_real_encoded_path(current_path), current_user_name, "w"
                 ):
                     print(f"{file_name}: Permission denied")
                     continue
@@ -194,7 +192,7 @@ if __name__ == '__main__':
                 # make the file and write an empty
                 PM.create_file(real_file_path, current_user_name)
                 PM.write_file(real_file_path, "")
-            
+
             elif cmd == "cat":
 
                 # get target file
@@ -210,13 +208,13 @@ if __name__ == '__main__':
                     continue
 
                 # check read permission
-                if not PM.check_permission(real_file_path, current_user_name, 'r'):
+                if not PM.check_permission(real_file_path, current_user_name, "r"):
                     print(f"{argv[0]}: Permission denied")
                     continue
 
                 # read file
                 print(PM.read_file(real_file_path))
-            
+
             elif cmd == "echo":
 
                 # get target file
@@ -227,7 +225,7 @@ if __name__ == '__main__':
                 real_file_path = PM.to_real_encoded_path(file_path)
 
                 # check write permission
-                if not PM.check_permission(real_file_path, current_user_name, 'w'):
+                if not PM.check_permission(real_file_path, current_user_name, "w"):
                     print(f"{argv[0]}: Permission denied")
                     continue
 
@@ -245,7 +243,7 @@ if __name__ == '__main__':
                 real_path = PM.to_real_encoded_path(target_path)
 
                 # check write permission
-                if not PM.check_permission(real_path, current_user_name, 'w'):
+                if not PM.check_permission(real_path, current_user_name, "w"):
                     print(f"{argv[0]}: Permission denied")
                     continue
 
@@ -261,7 +259,7 @@ if __name__ == '__main__':
                 # rename file/folder
                 real_renamed_path = os.path.join(
                     PM.to_real_encoded_path(current_path),
-                    encryptor.encrypt_data(argv[1])
+                    encryptor.encrypt_data(argv[1]),
                 )
                 os.rename(real_path, real_renamed_path)
 
@@ -284,7 +282,7 @@ if __name__ == '__main__':
                 old_permission = PM.get_path_permission(real_path)
                 old_permission["permission"] = new_permission
                 PM.set_path_permission(real_path, old_permission)
-            
+
             elif cmd == "rm":
 
                 if len(argv) < 1:
@@ -294,7 +292,7 @@ if __name__ == '__main__':
                 real_path = PM.to_real_encoded_path(target_path)
 
                 # check write permission
-                if not PM.check_permission(real_path, current_user_name, 'w'):
+                if not PM.check_permission(real_path, current_user_name, "w"):
                     print(f"{argv[0]}: Permission denied")
                     continue
 
@@ -304,9 +302,7 @@ if __name__ == '__main__':
                 elif os.path.isdir(real_path):
                     shutil.rmtree(real_path)
 
-
         except Exception as e:
             print("error occurred")
             print(e)
             continue
-                    
