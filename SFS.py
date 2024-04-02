@@ -197,7 +197,7 @@ if __name__ == "__main__":
 
                 # get target file
                 if len(argv) == 0:
-                    print("PLease specify file name.")
+                    print("Please specify file name.")
                     continue
                 file_path = os.path.join(current_path, argv[0])
                 real_file_path = PM.to_real_encoded_path(file_path)
@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
                 # get target file
                 if len(argv) < 2:
-                    print("PLease specify file name and message.")
+                    print("Please specify file name and message.")
                     continue
                 file_path = os.path.join(current_path, argv[0])
                 real_file_path = PM.to_real_encoded_path(file_path)
