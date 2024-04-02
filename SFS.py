@@ -39,11 +39,26 @@ if __name__ == '__main__':
                     current_path = f"/home/{current_user_name}"
 
                     # check password correctness
-                    password = getpass.getpass(f"{current_user_name}'s password: ")
-                    if current_user["password"] != password:
-                        print("Invalid credential.")
-                        init()
-                        continue
+                    if user_name != "admin":
+                        password = getpass.getpass(f"{current_user_name}'s password: ")
+                        if current_user["password"] != password:
+                            print("Invalid credential.")
+                            init()
+                            continue
+
+                    # check SFS-key if trying to login as admin
+                    if user_name == "admin":
+                        encrypt_key_file = "SFS-key.pem"
+                        if not os.path.isfile(encrypt_key_file):
+                            print("You need key to access admin user.")
+                            init()
+                            continue
+                        with open(encrypt_key_file, 'rb') as f:
+                            encrypt_key = f.read()
+                        if encrypt_key != encryptor.key_backup:
+                            print("Wrong key.")
+                            init()
+                            continue
 
                     # check hash correctness
                     if not PM.check_hash(current_user_name):

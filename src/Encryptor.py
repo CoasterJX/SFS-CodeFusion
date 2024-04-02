@@ -24,6 +24,8 @@ class Encryptor:
         with open(encrypt_key_file, 'rb') as f:
             encrypt_key = f.read()
             self.encryptor = Fernet(encrypt_key)
+        
+        self.key_backup = encrypt_key
     
 
     def encrypt_data(self, decrypted_data):

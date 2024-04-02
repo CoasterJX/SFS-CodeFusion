@@ -31,7 +31,7 @@ class PathManager:
             print("Initializing SFS for first use...")
             self.set_all_users({
                 "admin": {
-                    "password": "ECE422",
+                    "password": "",
                     "groups": "admin",
                     "lastHash": ""
                 }
